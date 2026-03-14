@@ -20,7 +20,7 @@ pipeline {
 
         stage('Pushing to ECR') {
             steps {
-                withAWS(credentials: 'AWS-CREDS', region: 'ap-south-1') {
+                withAWS(credentials: 'AWS-CRED', region: 'ap-south-1') {
 
                     sh '''
                     aws ecr get-login-password --region ap-south-1 \
@@ -43,7 +43,7 @@ pipeline {
 
         stage('K8S Deploy') {
             steps {
-                withAWS(credentials: 'AWS-CREDS', region: 'ap-south-1') {
+                withAWS(credentials: 'AWS-CRED', region: 'ap-south-1') {
 
                     sh '''
                     aws eks update-kubeconfig \
