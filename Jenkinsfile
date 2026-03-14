@@ -57,27 +57,27 @@ pipeline {
         }
 
         stage('Get Service URL') {
-            steps {
-                script {
-                    def serviceUrl = ""
-                    timeout(time: 5, unit: 'MINUTES') {
-                        while(serviceUrl == "") {
-                            serviceUrl = sh(
-                                script: "kubectl get svc word-counter-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
-                                returnStdout: true
-                            ).trim()
+    steps {
+        script {
+            withAWS(credentials: 'AWS-CRED', region: 'ap-south-1') {
+                def serviceUrl = ""
+                timeout(time: 5, unit: 'MINUTES') {
+                    while(serviceUrl == "") {
+                        serviceUrl = sh(
+                            script: "kubectl get svc word-counter-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'",
+                            returnStdout: true
+                        ).trim()
 
-                            if(serviceUrl == "") {
-                                echo "Waiting for LoadBalancer..."
-                                sleep 10
-                            }
+                        if(serviceUrl == "") {
+                            echo "Waiting for LoadBalancer..."
+                            sleep 10
                         }
                     }
-
-                    echo "Service URL: http://${serviceUrl}"
                 }
+                echo "Service URL: http://${serviceUrl}"
             }
         }
     }
+}
 }
 
