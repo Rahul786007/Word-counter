@@ -44,3 +44,254 @@ The inspiration of this project is from Rivers state university, computer scienc
 
 
 
+# 🚀 Jenkins CI/CD Pipeline Deployment to AWS EKS
+
+This project demonstrates a complete **DevOps CI/CD pipeline** that automatically builds a Docker image, pushes it to AWS, and deploys it to Kubernetes using Jenkins.
+
+---
+
+# 🏗 Architecture
+
+```text
+GitHub
+   ↓
+Jenkins Pipeline
+   ↓
+Docker Build
+   ↓
+Push Image → AWS ECR
+   ↓
+Deploy → AWS EKS
+   ↓
+Expose via LoadBalancer
+```
+
+---
+
+# ⚙️ Prerequisites
+
+Ensure the following tools are installed on the Jenkins server:
+
+* Docker
+* AWS CLI
+* kubectl
+* eksctl
+* Git
+* Jenkins
+
+---
+
+# ☁️ AWS Setup
+
+## Configure AWS CLI
+
+```bash
+aws configure
+```
+
+Verify access:
+
+```bash
+aws sts get-caller-identity
+```
+
+---
+
+# ☸️ Create EKS Cluster
+
+```bash
+eksctl create cluster \
+--name jenkins-eks-cluster \
+--region ap-south-1 \
+--nodegroup-name workers \
+--node-type t3.micro \
+--nodes 2
+```
+
+Verify nodes:
+
+```bash
+kubectl get nodes
+```
+
+---
+
+# 📦 Create ECR Repository
+
+```bash
+aws ecr create-repository \
+--repository-name jenkins-eks-app \
+--region ap-south-1
+```
+
+Verify repository:
+
+```bash
+aws ecr describe-repositories
+```
+
+---
+
+# 🔑 Jenkins Credentials Setup
+
+In Jenkins:
+
+```
+Manage Jenkins
+→ Credentials
+→ Add Credentials
+```
+
+Add AWS credentials with ID:
+
+```
+AWS-CREDS
+```
+
+---
+
+# 📂 Create Jenkins Pipeline
+
+Create a new pipeline job.
+
+```
+New Item → Pipeline
+```
+
+Pipeline configuration:
+
+```
+Pipeline script from SCM
+```
+
+Repository:
+
+```
+https://github.com/Rahul786007/Word-counter.git
+```
+
+Branch:
+
+```
+main
+```
+
+Script Path:
+
+```
+Jenkinsfile
+```
+
+---
+
+# 🚀 Run Jenkins Pipeline
+
+Trigger build:
+
+```
+Build Now
+```
+
+Pipeline stages executed:
+
+```
+Checkout SCM
+Configure
+Building image
+Pushing to ECR
+K8S Deploy
+Get Service URL
+```
+
+---
+
+# 📊 Verify Deployment
+
+Check pods:
+
+```bash
+kubectl get pods
+```
+
+Check services:
+
+```bash
+kubectl get svc
+```
+
+Example output:
+
+```
+word-counter-service   LoadBalancer
+```
+
+Retrieve application URL:
+
+```bash
+kubectl get svc word-counter-service \
+-o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+```
+
+---
+
+# 🌐 Access Application
+
+Open the LoadBalancer URL in the browser:
+
+```
+http://<load-balancer-url>
+```
+
+---
+
+# 📈 Scaling Nodegroup (If Pods Pending)
+
+If pods remain pending due to node limits:
+
+```bash
+eksctl scale nodegroup \
+--cluster jenkins-eks-cluster \
+--name workers \
+--nodes 3 \
+--nodes-max 3 \
+--region ap-south-1
+```
+
+Verify nodes:
+
+```bash
+kubectl get nodes
+```
+
+---
+
+# 🧹 Cleanup (Avoid AWS Charges)
+
+Delete the cluster:
+
+```bash
+eksctl delete cluster \
+--name jenkins-eks-cluster \
+--region ap-south-1
+```
+
+Delete ECR repository:
+
+```bash
+aws ecr delete-repository \
+--repository-name jenkins-eks-app \
+--region ap-south-1 \
+--force
+```
+
+---
+
+# 🎯 Learning Outcome
+
+This project demonstrates:
+
+* CI/CD pipeline automation using Jenkins
+* Docker image lifecycle management
+* AWS ECR integration
+* Kubernetes deployment on AWS EKS
+* End-to-end DevOps workflow
